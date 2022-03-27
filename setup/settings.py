@@ -80,16 +80,31 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.' + os.environ.get('DBENGINE', 'sqlite3'),
-        'NAME': os.environ.get('DBNAME', BASE_DIR / 'db.sqlite3'),
-        'USER': os.environ.get('DBUSER', 'root'),
-        'PASSWORD': os.environ.get('DBPASSWORD', ''),
-        'HOST': os.environ.get('DBHOST', '127.0.0.1'),
-        'PORT': os.environ.get('DBPORT', '3306'),
+CONTAINER_STATUS = os.environ.get('CONTAINER_STATUS', True)
+
+if CONTAINER_STATUS:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.' + os.environ.get('DBENGINE', 'mysql'),
+            'NAME': os.environ.get('DBNAME', 'django_starter'),
+            'USER': os.environ.get('DBUSER', 'django_starter'),
+            'PASSWORD': os.environ.get('DBPASSWORD', 'django_starter'),
+            'HOST': os.environ.get('DBHOST', 'db'),
+            'PORT': os.environ.get('DBPORT', '3306'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.' + os.environ.get('DBENGINE', 'sqlite3'),
+            'NAME': os.environ.get('DBNAME', BASE_DIR / 'db.sqlite3'),
+            'USER': os.environ.get('DBUSER', 'root'),
+            'PASSWORD': os.environ.get('DBPASSWORD', ''),
+            'HOST': os.environ.get('DBHOST', '127.0.0.1'),
+            'PORT': os.environ.get('DBPORT', '3306'),
+        }
+    }
+    
 
 
 # Password validation

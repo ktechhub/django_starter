@@ -13,6 +13,23 @@ git clone git@github.com:ktechhub/django_starter.git
 cp .env.example .env
 ```
 
+## Run with Docker
+To run with docker, set CONTAINER_STATUS in your .env
+```.env
+CONTAINER_STATUS=True
+```
+
+### Run docker compose
+
+```sh
+docker-compose up --build
+```
+
+### Running into issues?
+```sh
+sudo docker-compose up --build
+```
+
 
 ## Running project on local machine
 

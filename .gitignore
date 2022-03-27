@@ -133,3 +133,7 @@ media/
 
 # migrations
 */migrations/*.py
+
+
+.dbdata/
+dbdata/
