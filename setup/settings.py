@@ -150,10 +150,10 @@ if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     STATIC_URL = 'static/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    MEDIA_URL = os.path.join(BASE_DIR, 'media')
+    MEDIA_URL = os.path.join(BASE_DIR, 'media/')
 else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    MEDIA_URL = os.path.join(BASE_DIR, 'media')
+    MEDIA_URL = os.path.join(BASE_DIR, 'media/')
     
     AWS_LOCATION = 'static'
     STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
