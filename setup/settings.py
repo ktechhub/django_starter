@@ -11,21 +11,25 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-oq5z_wqq%a&+c-9(9t*%1tiwcg*zui%450ght4c(0qc&_6z2da'
+SECRET_KEY = os.environ.get("SECRET_KEY", "ktechhub-insecure-jhaskfjashfhjasfkjsafh")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+DEBUG = os.environ.get("DEBUG", True)
+if not DEBUG:
+    ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,*").split(",")
+else:
+    ALLOWED_HOSTS = ["127.0.0.1:8000", "127.0.0.1", "*"]
 
 
 # Application definition
@@ -37,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
@@ -54,7 +59,7 @@ ROOT_URLCONF = 'setup.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [TEMPLATE_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -75,8 +80,12 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.' + os.environ.get('DBENGINE', 'sqlite3'),
+        'NAME': os.environ.get('DBNAME', BASE_DIR / 'db.sqlite3'),
+        'USER': os.environ.get('DBUSER', 'root'),
+        'PASSWORD': os.environ.get('DBPASSWORD', ''),
+        'HOST': os.environ.get('DBHOST', '127.0.0.1'),
+        'PORT': os.environ.get('DBPORT', '3306'),
     }
 }
 
@@ -117,7 +126,26 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+    # '/var/www/static/',
+]
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    MEDIA_URL = '/media/'
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.environ.get("EMAIL_HOST_USER", "smtp.gmail.com")
+    EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", True)
+    EMAIL_PORT = os.environ.get("EMAIL_PORT", 587)
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", 'dummy@ktechhub.com')
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", '')
+
