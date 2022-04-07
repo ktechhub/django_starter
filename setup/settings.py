@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
+import sys
+import json
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -80,9 +82,9 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-CONTAINER_STATUS = os.environ.get('CONTAINER_STATUS', True)
+CONTAINER_STATUS = os.environ.get('CONTAINER_STATUS', False)
 
-if CONTAINER_STATUS:
+if CONTAINER_STATUS == True:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.' + os.environ.get('DBENGINE', 'mysql'),
@@ -91,6 +93,9 @@ if CONTAINER_STATUS:
             'PASSWORD': os.environ.get('DBPASSWORD', 'django_starter'),
             'HOST': os.environ.get('DBHOST', 'db'),
             'PORT': os.environ.get('DBPORT', '3306'),
+            'OPTIONS': json.loads(
+                os.getenv('DATABASE_OPTIONS', '{}')
+            ),
         }
     }
 else:
@@ -102,6 +107,9 @@ else:
             'PASSWORD': os.environ.get('DBPASSWORD', ''),
             'HOST': os.environ.get('DBHOST', '127.0.0.1'),
             'PORT': os.environ.get('DBPORT', '3306'),
+            'OPTIONS': json.loads(
+                os.getenv('DATABASE_OPTIONS', '{}')
+            ),
         }
     }
     
