@@ -45,8 +45,12 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sites',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
     'storages',
     'users'
 ]
@@ -77,6 +81,11 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 WSGI_APPLICATION = 'setup.wsgi.application'
@@ -183,6 +192,16 @@ else:
 
 SITE_ID = 1
 AUTH_USER_MODEL = 'users.CustomUser'
+
+#########################
+# AllAuth Configuration #
+#########################
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_PASSWORD_MIN_LENGTH = 8
 
 # Logging Configuration
 
