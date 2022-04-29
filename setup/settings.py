@@ -10,10 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+from django.core.management.utils import get_random_secret_key
 from pathlib import Path
 import os
 import sys
 import json
+import logging.config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,14 +26,15 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY", "ktechhub-insecure-jhaskfjashfhjasfkjsafh")
+SECRET_KEY = os.environ.get("SECRET_KEY", get_random_secret_key())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", True)
-if not DEBUG:
+ENV = os.environ.get("ENV", "dev")
+if ENV == "dev":
+    DEBUG = True
     ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,*").split(",")
 else:
-    ALLOWED_HOSTS = ["127.0.0.1:8000", "127.0.0.1", "*"]
+    ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,*").split(",")
 
 
 # Application definition
@@ -44,8 +47,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    
     'storages',
+    'users'
 ]
 
 MIDDLEWARE = [
@@ -84,35 +87,19 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 
 CONTAINER_STATUS = os.environ.get('CONTAINER_STATUS', False)
 
-if CONTAINER_STATUS == True:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.' + os.environ.get('DBENGINE', 'mysql'),
-            'NAME': os.environ.get('DBNAME', 'django_starter'),
-            'USER': os.environ.get('DBUSER', 'django_starter'),
-            'PASSWORD': os.environ.get('DBPASSWORD', 'django_starter'),
-            'HOST': os.environ.get('DBHOST', 'db'),
-            'PORT': os.environ.get('DBPORT', '3306'),
-            'OPTIONS': json.loads(
-                os.getenv('DATABASE_OPTIONS', '{}')
-            ),
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.' + os.environ.get('DBENGINE', 'sqlite3'),
+        'NAME': os.environ.get('DBNAME', BASE_DIR / 'db.sqlite3'),
+        'USER': os.environ.get('DBUSER', 'root'),
+        'PASSWORD': os.environ.get('DBPASSWORD', ''),
+        'HOST': os.environ.get('DBHOST', '127.0.0.1'),
+        'PORT': os.environ.get('DBPORT', '3306'),
+        'OPTIONS': json.loads(
+            os.getenv('DATABASE_OPTIONS', '{}')
+        ),
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.' + os.environ.get('DBENGINE', 'sqlite3'),
-            'NAME': os.environ.get('DBNAME', BASE_DIR / 'db.sqlite3'),
-            'USER': os.environ.get('DBUSER', 'root'),
-            'PASSWORD': os.environ.get('DBPASSWORD', ''),
-            'HOST': os.environ.get('DBHOST', '127.0.0.1'),
-            'PORT': os.environ.get('DBPORT', '3306'),
-            'OPTIONS': json.loads(
-                os.getenv('DATABASE_OPTIONS', '{}')
-            ),
-        }
-    }
-    
+}
 
 
 # Password validation
@@ -149,40 +136,31 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATICFILES_DIRS = [
-    BASE_DIR / os.path.join(BASE_DIR, 'static'),
-    # '/var/www/static/',
-]
-# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+if ENV == "dev":
+    STATIC_URL = 'static/'
+    STATICFILES_DIRS = [
+        BASE_DIR / "static",
+        # '/var/www/static/',
+    ]
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    MEDIA_URL = '/media/'
 
-AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "")
 AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
-    
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-if DEBUG:
+if ENV == "dev":
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    STATIC_URL = 'static/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    MEDIA_URL = os.path.join(BASE_DIR, 'media/')
 else:
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    MEDIA_URL = os.path.join(BASE_DIR, 'media/')
-    
-    AWS_LOCATION = 'static'
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
-    DEFAULT_FILE_STORAGE = 'setup.storage_backends.MediaStorage'
-
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     EMAIL_HOST = os.environ.get("EMAIL_HOST_USER", "smtp.gmail.com")
     EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", True)
@@ -190,3 +168,48 @@ else:
     EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", 'dummy@ktechhub.com')
     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", '')
 
+    AWS_LOCATION = 'static'
+    AWS_DEFAULT_ACL = 'public-read'
+
+    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+    DEFAULT_FILE_STORAGE = 'setup.storage_backends.MediaStorage'
+    STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
+    STATIC_ROOT = 'static/'
+
+
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    MEDIA_URL = os.path.join(BASE_DIR, 'media/')
+
+SITE_ID = 1
+AUTH_USER_MODEL = 'users.CustomUser'
+
+# Logging Configuration
+
+# Clear prev config
+LOGGING_CONFIG = None
+
+# Get loglevel from env
+LOGLEVEL = os.getenv('DJANGO_LOGLEVEL', 'info').upper()
+
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+    },
+    'loggers': {
+        '': {
+            'level': LOGLEVEL,
+            'handlers': ['console',],
+        },
+    },
+})
